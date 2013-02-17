@@ -1,0 +1,30 @@
+<project name="FileSyncNDN" basedir="." default="main">
+
+    <property name="lib.dir"     value="${ant.project.name}/libs"/>
+
+    <property name="src.dir"     value="${ant.project.name}/src"/>
+
+    <property name="build.dir"   value="${ant.project.name}/build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+
+    <property name="main-class"  value="FileSyncNDN"/>
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath" includeantruntime="false"/>
+    </target>
+
+    <target name="clean-build" depends="clean"/>
+
+    <target name="main" depends="clean, compile"/>
+
+</project>
+
