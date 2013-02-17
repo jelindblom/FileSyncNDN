@@ -1,0 +1,77 @@
+FileSyncNDN: P2P File Sharing Service over NDN
+
+Intro/Motivation:
+
+We developed a distributed file sharing application that runs over NDN.  This distributed service is in contrast to centralized services such as FTP and Dropbox which are vulnerable to a single point of failure and have inefficent means of distributing information to multiple clients.  FileSyncNDN takes advantage of NDN's efficient means of content distribution and provides a peer to peer service to which users can share files.
+
+App Architecture:
+
+FileSyncNDN provides access to shared files across machines by mapping these files to a collection of versioned CCNNetworkObjects.  It synchronizes collections between machines using the CCNx Synchronization Protocol.  Each machine informs other machines of local changes to the collection in the form of a global snapshot.  In our current implementation, the most recent copy is chosen when a conflict occurs.
+
+Implementation:
+
+FileSyncNDN is written using the CCNx Java API and it uses the CCNx Synchronization Protocol.  Jnotify, a Java-based file system watcher, is used to monitor local changes made to shared files.  Thread pools are used to handle Jnotify events and hashtables are used to provide fast, synchronized lookup of file information.  FileSyncNDN currently supports the Linux and Mac environment.
+
+Usage:
+
+IMPORTANT: We recommend that you create a separate "test" shared directory, independent of any important folders or files to test our application.  Our application creates, modifies and deletes files within the shared directory it monitors based on changes made to shared directories on other machines.  Please make sure that anything you add to the shared directory monitored by our application is either not important, or has been backed up in another safe location.    
+
+Our application can be compiled and executed in two ways: Using the Eclipse environment or the command line.  
+
+Command Line (Recommended):
+
+Change Directory to FileSyncNDN:
+	
+	cd [Git Repository Directory]\FileSyncNDN
+
+Elevate Permissions for one Shell Script:
+
+	chmod a+x execute.sh
+
+Compile the Application:
+
+	ant
+
+Execute the Application:
+
+	./execute.sh [ -h ] [ -g ] [ -d ] [ -x ] [ -r <repository dir> ]
+
+	-h : help
+	-g : gui
+	-d : execute ccndstart
+	-x : 64-bit JVM (for Jnotify native libraries)
+	-r : execute ccnr in <repository dir>
+
+Eclipse Environment:
+
+Import the FileSyncNDN Project into Eclipse.  Under Project run configuration, add this VM argument for 32-bit JVM's: -Djava.library.path=./libs or this argument for 64-bit JVM's: -Djava.library.path=./libs/64bit.  This resolves the JNotify native library dependency.  Please make sure the main class of the project is FileSyncNDNGui for a GUI or FileSyncNDN for command line.  
+
+Execute ccnd and ccnr manually before starting the application.  
+
+Interacting with the Application (GUI):
+
+When the application is executed, a GUI will appear and ask you to enter information, example input follows:
+
+<shared dir> : /home/jared/Desktop/Shared
+<topological prefix> : /ndn/ucla.edu
+<naming prefix> : /dropbox
+
+Once confirm is clicked the GUI disappears and the application starts running.
+
+Interacting with the Application (Command Line):
+
+You will be asked to enter the same information as asked by the program above through a simpler interface.
+
+Once the application is executed, you may interact with it by dragging and dropping, copy and pasting, creating or deleting files within the shared directory you defined earlier.  
+
+IMPORTANT: Each computer wishing to share files must use the SAME topological and naming prefix as each other computer.  Also, make sure each ccnd points to one another.  This can be attained by adding an entry for each computer in ccnd.conf under ~/ccnd.
+
+Questions/Comments:
+
+Please contact the authors: Jared <lindblom@cs.ucla.edu>, John <mingchuh@cs.ucla.edu>
+
+Known Bugs:
+
+Our application relies on Jnotify to monitor changes to the file within the shared directory.  We have noticed that Jnotify sometimes does not detect deletions from the shared directory on Ubuntu 12.04.
+
+We are investigating an issue with signature verification where one host cannot verify the signature on content published by another host.  A workaround for this issue is to backup the keystores of every host and distribute one keystore to every host, so that they all use the same key to sign the content they publish.     
