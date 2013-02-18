@@ -74,4 +74,4 @@ Known Bugs:
 
 Our application relies on Jnotify to monitor changes to the file within the shared directory.  We have noticed that Jnotify sometimes does not detect deletions from the shared directory on Ubuntu 12.04.
 
-We are investigating an issue with signature verification where one host cannot verify the signature on content published by another host.  A workaround for this issue is to backup the keystores of every host and distribute one keystore to every host, so that they all use the same key to sign the content they publish.     
+     
