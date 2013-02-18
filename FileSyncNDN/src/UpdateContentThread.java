@@ -3,7 +3,9 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.ccnx.ccn.io.CCNVersionedInputStream;
+import org.ccnx.ccn.profiles.VersioningProfile;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.Interest;
 
 /**
  * FileSyncNDN: Distributed, Dropbox-like File Sharing Service over NDN
@@ -37,7 +39,8 @@ public class UpdateContentThread implements Runnable {
 			fileInfo.setModifyState(true);
 			
 			/** Create Input Stream	 */
-			CCNVersionedInputStream inputStream = new CCNVersionedInputStream(versionedContentName);
+			Interest interest = VersioningProfile.latestVersionInterest(versionedContentName, null, null);
+			CCNVersionedInputStream inputStream = new CCNVersionedInputStream(interest.name(), parameters.getHandle());
 		
 			/** Open File */
 			File file = new File(filePath);
@@ -53,6 +56,6 @@ public class UpdateContentThread implements Runnable {
 		} 
 		catch (IOException e) {
 			e.printStackTrace();
-		}
+		} 
 	}
 }

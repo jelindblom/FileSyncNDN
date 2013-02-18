@@ -1,6 +1,10 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,15 +30,20 @@ public class Parameters {
 
 	/** Global Knowledge of Local Shared Folder */
 	Hashtable<String, FileInformation> sharedFiles;
+	
+	/** Set of Faces (for keys) */
+	HashSet<String> faces;
 
 	/** Global Snapshot Object */
 	//CCNSnapshotObject globalSnapshotObject;
 
 	/** Shared Directory Path */	
 	private String sharedDirectoryPath;
+	
+	String myIpAddress;
 
 	/** Topology and Namespace */
-	private ContentName topology, namespace, snapshot, snapshotVersion;
+	private ContentName topology, namespace, snapshot, snapshotVersion, ipBroadcastPrefix, myheartBeatName;
 
 	/** Sync */
 	CCNSync sync;
@@ -55,6 +64,7 @@ public class Parameters {
 	@SuppressWarnings("rawtypes")
 	public Parameters (String sharedDirectoryPath, ContentName topology, ContentName namespace, ContentName snapshot) {
 		sharedFiles = new Hashtable<String, FileInformation>();
+		faces = new HashSet<String>();
 
 		this.sharedDirectoryPath = sharedDirectoryPath;
 		this.topology = topology;
@@ -66,16 +76,36 @@ public class Parameters {
 
 		taskProgress = new ArrayList<Future>();
 		
-		sync = new CCNSync();
-
 		try {
+			/** What's my IP Address? */
+			URL whatismyip = new URL("http://checkip.amazonaws.com");
+			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
+
+			myIpAddress = bufferedReader.readLine();
+			bufferedReader.close();
+			
+			/** Build IPBroadcast Prefix */
+			ipBroadcastPrefix = ContentName.fromNative("/ndn/broadcast/filesync/ip.address/");
+			
+			/** Build HeartBeat Name */
+			myheartBeatName = ContentName.fromNative("/ndn/broadcast/filesync/ip.address/" + myIpAddress);
+			
 			/** Create Handle */
 			handle = CCNHandle.open();
+			
+			/** Dispatch to Broadcast Periodic Heartbeats */
+			Runnable runnable = new Heartbeats(this);
+			threadPool.submit(runnable);
+			
+			/** Register to Receive Updates from Others */
+			handle.registerFilter(ipBroadcastPrefix, new BroadcastHandler(this));
+			
+			sync = new CCNSync();
 
 			/** Start Sync */
 			sync.startSync(handle, topology, namespace, new SyncHandler(this));
 		
-			Thread.sleep(3000);
+			Thread.sleep(5000);
 		} 
 		catch (ConfigurationException e) {
 			e.printStackTrace();
@@ -84,6 +114,9 @@ public class Parameters {
 			e.printStackTrace();
 		} 
 		catch (InterruptedException e) {
+			e.printStackTrace();
+		} 
+		catch (MalformedContentNameStringException e) {
 			e.printStackTrace();
 		}
 	}
@@ -106,6 +139,10 @@ public class Parameters {
 
 	public ContentName getSnapshotVersion() {
 		return snapshotVersion;
+	}
+	
+	public ContentName getHeartBeatName() {
+		return myheartBeatName;
 	}
 	
 	public CCNHandle getHandle() {

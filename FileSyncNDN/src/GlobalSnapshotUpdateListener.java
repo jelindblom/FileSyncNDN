@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import org.ccnx.ccn.io.CCNVersionedInputStream;
+import org.ccnx.ccn.profiles.VersioningProfile;
 import org.ccnx.ccn.protocol.ContentName;
+import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
@@ -31,7 +33,8 @@ public class GlobalSnapshotUpdateListener implements Runnable {
 			Thread.sleep(250);
 			
 			/** Create Input Stream	 */
-			CCNVersionedInputStream inputStream = new CCNVersionedInputStream(snapshotVersion);
+			Interest interest = VersioningProfile.latestVersionInterest(snapshotVersion, null, null);
+			CCNVersionedInputStream inputStream = new CCNVersionedInputStream(interest.name(), parameters.getHandle());
 
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 

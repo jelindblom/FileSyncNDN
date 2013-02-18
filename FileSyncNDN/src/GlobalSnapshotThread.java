@@ -84,6 +84,6 @@ public class GlobalSnapshotThread implements Runnable {
 		} 
 		catch (IOException e) {
 			e.printStackTrace();
-		} 
+		}
 	}
 }
